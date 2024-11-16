@@ -1,0 +1,61 @@
+api_providers:
+  - provider_name: "openrouter"
+    base_url: "https://openrouter.ai/api/v1"
+    api_key: "sk-or-v1-XXXX"
+    rate_limit: 0.1
+    weight: 2
+    default_model: "meta-llama/llama-3.2-3b-instruct:free"
+    provider_mappings:
+      llama2: "meta-llama/llama-2-70b-chat"
+      mistral: "mistralai/mistral-7b"
+      codellama: "meta-llama/codellama-34b"
+      mixtral: "mistralai/mixtral-8x7b"
+      neural-chat: "anthropic/claude-3-opus"
+  - provider_name: "groq"
+    base_url: "https://api.groq.com/openai/v1/"
+    api_key: "gsk_XXXX"
+    rate_limit: 0.1
+    weight: 3
+    default_model: "llama-3.2-3b-preview"
+    provider_mappings:
+      llama2: "llama2-70b-chat"
+      mixtral: "mixtral-8x7b"
+      mistral: "mixtral-8x7b"
+  - provider_name: "sambanova"
+    base_url: "https://api.sambanova.ai/v1"
+    api_key: "XXXX"
+    rate_limit: 0.1
+    weight: 3
+    default_model: "Meta-Llama-3.1-8B-Instruct"
+    provider_mappings:
+      llama2: "llama2-70b-chat"
+      mixtral: "mixtral-8x7b"
+      mistral: "mixtral-8x7b"
+  - provider_name: "together"
+    base_url: "https://api.together.xyz/v1"
+    api_key: "XXXX"
+    rate_limit: 0.1
+    weight: 1
+    default_model: "meta-llama/Llama-3.2-3B-Instruct-Turbo"
+    provider_mappings:
+      llama2: "llama2-70b-chat"
+      mixtral: "mixtral-8x7b"
+      mistral: "mixtral-8x7b"
+server:
+  host: "0.0.0.0"
+  port: 11434
+  log_level: "INFO"
+  cors_origins: ["*"]
+  workers: 4
+
+database:
+  file: "db.json"
+  backup_enabled: true
+  backup_interval: 3600
+
+logging:
+  level: "INFO"
+  file: "logs/api.log"
+  max_size: 10485760
+  backup_count: 5
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s" 
