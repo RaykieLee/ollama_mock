@@ -1,49 +1,46 @@
 import logging
-import sys
-import os
-from typing import Optional
-from logging.handlers import RotatingFileHandler
+import logging.handlers
+from pathlib import Path
 
-def setup_logging(log_file: Optional[str] = None) -> None:
-    """
-    配置日志系统
+def setup_logging():
+    # 清除所有现有的处理器
+    for logger_name in logging.root.manager.loggerDict:
+        logger = logging.getLogger(logger_name)
+        logger.handlers.clear()
+    logging.getLogger().handlers.clear()
     
-    Args:
-        log_file: 日志文件路径，默认为 logs/api.log
-    """
-    # 确保日志目录存在
-    log_dir = "logs"
-    os.makedirs(log_dir, exist_ok=True)
+    # 基本配置
+    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    log_level = logging.INFO
     
-    # 默认日志文件
-    if log_file is None:
-        log_file = os.path.join(log_dir, "api.log")
+    # 创建日志目录
+    log_dir = Path("logs")
+    log_dir.mkdir(exist_ok=True)
     
-    # 创建格式化器
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-    
-    # 控制台处理器
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setFormatter(formatter)
-    
-    # 文件处理器（带有轮转）
-    file_handler = RotatingFileHandler(
-        log_file,
-        maxBytes=10*1024*1024,  # 10MB
+    # 文件处理器
+    file_handler = logging.handlers.RotatingFileHandler(
+        filename=log_dir / "api.log",
+        maxBytes=10*1024*1024,
         backupCount=5,
         encoding='utf-8'
     )
-    file_handler.setFormatter(formatter)
+    file_handler.setFormatter(logging.Formatter(log_format))
+    
+    # 控制台处理器
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter(log_format))
     
     # 配置根日志记录器
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
-    root_logger.addHandler(console_handler)
+    root_logger.setLevel(log_level)
     root_logger.addHandler(file_handler)
+    root_logger.addHandler(console_handler)
     
-    # 设置一些第三方库的日志级别
+    # 特别处理 httpx 日志
+    httpx_logger = logging.getLogger("httpx")
+    httpx_logger.handlers = []  # 清除可能存在的处理器
+    httpx_logger.propagate = True  # 让日志传递到根记录器
+    
+    # 设置其他模块的日志级别
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
-    logging.getLogger("fastapi").setLevel(logging.WARNING) 
+    logging.getLogger("uvicorn.error").handlers = []  # 清除 uvicorn 的处理器 
