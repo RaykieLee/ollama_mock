@@ -1,39 +1,37 @@
+import os
 import logging
-import logging.handlers
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 def setup_logging():
-    # 清除所有现有的处理器
-    for logger_name in logging.root.manager.loggerDict:
-        logger = logging.getLogger(logger_name)
-        logger.handlers.clear()
-    logging.getLogger().handlers.clear()
-    
-    # 基本配置
-    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    log_level = logging.INFO
-    
     # 创建日志目录
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
     
+    # 配置根日志记录器
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    
     # 文件处理器
-    file_handler = logging.handlers.RotatingFileHandler(
-        filename=log_dir / "api.log",
-        maxBytes=10*1024*1024,
-        backupCount=5,
-        encoding='utf-8'
-    )
-    file_handler.setFormatter(logging.Formatter(log_format))
+    try:
+        file_handler = RotatingFileHandler(
+            filename=log_dir / "api.log",
+            maxBytes=10*1024*1024,  # 10MB
+            backupCount=5,
+            delay=True  # 延迟创建文件，直到第一次写入
+        )
+        file_handler.setFormatter(
+            logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        )
+        root_logger.addHandler(file_handler)
+    except PermissionError:
+        print("警告: 无法创建日志文件，将只输出到控制台")
     
     # 控制台处理器
     console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter(log_format))
-    
-    # 配置根日志记录器
-    root_logger = logging.getLogger()
-    root_logger.setLevel(log_level)
-    root_logger.addHandler(file_handler)
+    console_handler.setFormatter(
+        logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    )
     root_logger.addHandler(console_handler)
     
     # 特别处理 httpx 日志
