@@ -37,13 +37,26 @@ class Client:
         current_time = time.time()
         available_providers = []
         
+        # 计算所有提供商中等待时间最短的
+        min_wait_time = min(
+            (1.0 / p.rate_limit) - (current_time - p.last_request_time)
+            for p in self.providers
+        )
+        
+        # 如果所有提供商都需要等待，直接返回等待时间最短的
+        if min_wait_time > 0:
+            return min(self.providers, key=lambda p: 
+                (1.0 / p.rate_limit) - (current_time - p.last_request_time))
+        
+        # 只将当前可用的提供商添加到候选列表中
         for provider in self.providers:
-            if current_time - provider.last_request_time >= (1.0 / provider.rate_limit):
+            wait_time = (1.0 / provider.rate_limit) - (current_time - provider.last_request_time)
+            if wait_time <= 0:
                 available_providers.extend([provider] * provider.weight)
         
         if not available_providers:
-            # 如果没有可用的提供商，选择等待时间最短的
-            return min(self.providers, key=lambda p: p.last_request_time + (1.0 / p.rate_limit))
+            return min(self.providers, key=lambda p: 
+                p.last_request_time + (1.0 / p.rate_limit))
             
         return random.choice(available_providers)
 
@@ -57,6 +70,8 @@ class Client:
         """调用 API 进行聊天补全"""
         while True:
             provider = self._select_provider()
+            logger.info(f"Selected provider: {provider.provider_name}")
+            
             current_time = time.time()
             # 计算等待时间，如果等待时间小于0，则不等待，直接请求，否则等待.等待时间为1/rate_limit - (当前时间 - 上次请求时间),rate 为 1000的时候，等待时间为1/1000 - (当前时间 - 上次请求时间)
             wait_time = (1.0 / provider.rate_limit) - (current_time - provider.last_request_time)

@@ -1,0 +1,9 @@
+services:
+  ollama-mock:
+    container_name: ollama-mock
+    image: raykielee/ollama-mock:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./config/config.yaml:/app/config/config.yaml
+    restart: unless-stopped
