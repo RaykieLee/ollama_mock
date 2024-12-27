@@ -19,7 +19,7 @@
     ```
 2. 安装依赖：
     ```bash
-    pip install -r requirements.txt
+    pip install -e .
     ``` 
 3. 配置 API 提供商：
     - 复制 `config/config.yaml.example` 文件为 `config/config.yaml`，并根据需要进行配置。
